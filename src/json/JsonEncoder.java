@@ -78,6 +78,7 @@ public class JsonEncoder {
 				if (jf.IOType() == JsonField.IOType.R)
 					continue;
 				String tag = jf.tag().length() == 0 ? f.getName() : jf.tag();
+				f.setAccessible(true);
 				jobj.add(tag, encode(f.get(obj)));
 			}
 		for (Method m : cls.getDeclaredMethods())

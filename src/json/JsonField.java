@@ -17,10 +17,22 @@ import java.lang.annotation.Target;
  * {@code IOType} <br>
  * 3. use on methods, must have {@code IOType} {@code R} or {@code W} <br>
  * 4. {@code GenType} {@code FILL} mode, on {@code JsonClassType} {@code SET} or
- * {@code FILL} object field only, allows modification on pre-existing objects.
- * Not applicable to Collections. <br>
+ * {@code FILL} object field only, allows injection on pre-existing objects. Not
+ * applicable to Collections. <br>
  * 5. {@Code GenType} {@code GEN} mode, use parameter {@code generator} to
- * specify function name, must be static function declared in this class
+ * specify function name, must be static function declared in this class<br>
+ * <hr>
+ * Forbidden pairs:
+ * <li>Primitive - GenType.FILL</li>
+ * <li>Primitive - GenType.GEN</li>
+ * <li>Collection - GenType.FILL</li>
+ * <li>Method - GenType.FILL</li>
+ * <li>Method - IOType.RW</li>
+ * <hr>
+ * Suggestions:
+ * <li>GenType.GEN with object field without using JsonObject can be replaced
+ * with GenType.FILL to avoid unnecessary functions</li>
+ * <li>use functional read and field write to pre-process inputs</li>
  */
 @Documented
 @Retention(RUNTIME)

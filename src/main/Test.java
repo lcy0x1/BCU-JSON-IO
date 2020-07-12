@@ -2,6 +2,7 @@ package main;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -101,10 +102,24 @@ public class Test {
 	}
 
 	public static void main(String[] args) throws Exception {
+		PackLoader.writePack(new File("./pack.pack"), new File("./src"), "ver", "id", "test", "password");
+		PackLoader.readPack((str) -> getFile(new File("./out/" + str)), new File("./pack.pack"));
 		File f = new File("./test.json");
 		JsonElement elem = JsonParser.parseReader(new FileReader(f));
 		JsonA obj = JsonDecoder.decode(elem, JsonA.class);
 		System.out.println(JsonEncoder.encode(obj));
+	}
+
+	private static File getFile(File f) {
+		try {
+			if (!f.getParentFile().exists())
+				f.getParentFile().mkdirs();
+			if (!f.exists())
+				f.createNewFile();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return f;
 	}
 
 }

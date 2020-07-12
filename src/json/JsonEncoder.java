@@ -39,25 +39,18 @@ public class JsonEncoder {
 		}
 		if (cls.getAnnotation(JsonClass.class) != null)
 			return encodeObject(new JsonObject(), obj, cls);
-		if(obj instanceof List)
+		if (obj instanceof List)
 			return encodeList((List<?>) obj);
-		if(obj instanceof Set)
+		if (obj instanceof Set)
 			return encodeSet((Set<?>) obj);
-		if(obj instanceof Map)
-			return encodeMap((Map<?,?>) obj);
+		if (obj instanceof Map)
+			return encodeMap((Map<?, ?>) obj);
 		throw new JsonException(Type.UNDEFINED, null, "object " + obj + " not defined");
 	}
 
 	private static JsonArray encodeList(List<?> list) throws Exception {
 		JsonArray ans = new JsonArray(list.size());
 		for (Object obj : list)
-			ans.add(encode(obj));
-		return ans;
-	}
-
-	private static JsonArray encodeSet(Set<?> set) throws Exception {
-		JsonArray ans = new JsonArray(set.size());
-		for (Object obj : set)
 			ans.add(encode(obj));
 		return ans;
 	}
@@ -76,9 +69,12 @@ public class JsonEncoder {
 	private static JsonObject encodeObject(JsonObject jobj, Object obj, Class<?> cls) throws Exception {
 		if (cls.getSuperclass().getAnnotation(JsonClass.class) != null)
 			encodeObject(jobj, obj, cls);
+		JsonClass jc = cls.getAnnotation(JsonClass.class);
 		for (Field f : cls.getDeclaredFields())
-			if (f.getAnnotation(JsonField.class) != null) {
+			if (jc.type() == JsonClass.Type.ALLDATA || f.getAnnotation(JsonField.class) != null) {
 				JsonField jf = f.getAnnotation(JsonField.class);
+				if (jf == null)
+					jf = JsonField.DEF;
 				if (jf.IOType() == JsonField.IOType.R)
 					continue;
 				String tag = jf.tag().length() == 0 ? f.getName() : jf.tag();
@@ -97,6 +93,13 @@ public class JsonEncoder {
 				jobj.add(tag, encode(m.invoke(obj)));
 			}
 		return jobj;
+	}
+
+	private static JsonArray encodeSet(Set<?> set) throws Exception {
+		JsonArray ans = new JsonArray(set.size());
+		for (Object obj : set)
+			ans.add(encode(obj));
+		return ans;
 	}
 
 }

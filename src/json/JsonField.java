@@ -17,7 +17,8 @@ import java.lang.annotation.Target;
  * {@code IOType} <br>
  * 3. use on methods, must have {@code IOType} {@code R} or {@code W} <br>
  * 4. {@code GenType} {@code FILL} mode, on {@code JsonClassType} {@code SET} or
- * {@code FILL} object field only, allows modification on pre-existing objects
+ * {@code FILL} object field only, allows modification on pre-existing objects.
+ * Not applicable to Collections. <br>
  * 5. {@Code GenType} {@code GEN} mode, use parameter {@code generator} to
  * specify function name, must be static function declared in this class
  */
@@ -47,6 +48,11 @@ public @interface JsonField {
 		}
 
 		@Override
+		public Class<?>[] generic() {
+			return new Class[0];
+		}
+
+		@Override
 		public GenType GenType() {
 			return GenType.SET;
 		}
@@ -65,11 +71,6 @@ public @interface JsonField {
 		public String tag() {
 			return "";
 		}
-
-		@Override
-		public String typeProvider() {
-			return "";
-		}
 	};
 
 	/**
@@ -78,8 +79,12 @@ public @interface JsonField {
 	 * parameter can be unused, as it will also be injected
 	 */
 	String generator() default "";
-	
-	String typeProvider() default "";
+
+	/**
+	 * used for generic data structures. Currently supports List, Set, and Map.
+	 * Note: the field declaration must be instantiatable
+	 */
+	Class<?>[] generic() default {};
 
 	/**
 	 * Generation Type for this Field. Default is SET, which means to set the value.

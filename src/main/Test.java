@@ -2,7 +2,10 @@ package main;
 
 import java.io.File;
 import java.io.FileReader;
-
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -10,6 +13,7 @@ import com.google.gson.JsonParser;
 import json.JsonClass;
 import json.JsonClass.Type;
 import json.JsonField;
+import json.JsonField.GenType;
 import json.JsonDecoder;
 import json.JsonDecoder.OnInjected;
 import json.JsonEncoder;
@@ -20,21 +24,27 @@ public class Test {
 	@JsonClass(type = Type.DATA)
 	public static class JsonA {
 
-		public static JsonB gen(JsonA obj, JsonObject jobj) {
+		public static JsonB gen(JsonA obj, String tag, JsonObject jobj) {
 			return new JsonB(obj);
 		}
 
-		@JsonField()
-		public final int[] f0 = null;
+		@JsonField(generic = Integer.class)
+		public final ArrayList<Integer> f0 = null;
 
 		@JsonField()
 		public JsonC f1;
 
-		@JsonField(GenType = JsonField.GenType.GEN, generator = "gen")
-		public JsonB[] f2;
+		@JsonField(GenType = GenType.GEN, generator = "gen", generic = JsonB.class)
+		public ArrayList<JsonB> f2;
 
-		@JsonField(GenType = JsonField.GenType.FILL)
+		@JsonField(GenType = GenType.FILL)
 		public JsonB f3 = new JsonB(this);
+
+		@JsonField(generic = { Integer.class, String.class })
+		public HashMap<Integer, String> f4 = null;
+
+		@JsonField
+		public JsonD data;
 
 	}
 
@@ -43,8 +53,8 @@ public class Test {
 
 		public JsonA par;
 
-		@JsonField
-		public int[] f;
+		@JsonField(generic = Integer.class)
+		public HashSet<Integer> f;
 
 		public JsonB(JsonA a) {
 			par = a;
@@ -52,7 +62,7 @@ public class Test {
 
 		@OnInjected
 		public void create() {
-			System.out.println("OnInjected: " + f.length);
+			System.out.println("OnInjected: " + f.size());
 		}
 
 	}
@@ -61,7 +71,7 @@ public class Test {
 	public static class JsonC {
 
 		public static JsonC gen(JsonObject o) throws JsonException {
-			return (JsonC) JsonDecoder.inject(o, JsonC.class, new JsonC());
+			return new JsonC();
 		}
 
 		@JsonField(tag = "a", IOType = JsonField.IOType.W)
@@ -76,11 +86,40 @@ public class Test {
 
 	}
 
+	@JsonClass(type = Type.ALLDATA)
+	public static class JsonD {
+
+		public int a;
+
+		public int[] b;
+
+		public String c;
+
+		public String[] d;
+
+		public boolean e;
+
+	}
+
 	public static void main(String[] args) throws Exception {
+		PackLoader.writePack(new File("./pack.pack"), new File("./src"), "ver", "id", "test", "password");
+		PackLoader.readPack((str) -> getFile(new File("./out/" + str)), new File("./pack.pack"));
 		File f = new File("./test.json");
 		JsonElement elem = JsonParser.parseReader(new FileReader(f));
 		JsonA obj = JsonDecoder.decode(elem, JsonA.class);
 		System.out.println(JsonEncoder.encode(obj));
+	}
+
+	private static File getFile(File f) {
+		try {
+			if (!f.getParentFile().exists())
+				f.getParentFile().mkdirs();
+			if (!f.exists())
+				f.createNewFile();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return f;
 	}
 
 }

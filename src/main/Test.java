@@ -20,7 +20,7 @@ public class Test {
 	@JsonClass(type = Type.DATA)
 	public static class JsonA {
 
-		public static JsonB gen(JsonA obj, JsonObject jobj) {
+		public static JsonB gen(JsonA obj, String tag, JsonObject jobj) {
 			return new JsonB(obj);
 		}
 
@@ -61,7 +61,7 @@ public class Test {
 	public static class JsonC {
 
 		public static JsonC gen(JsonObject o) throws JsonException {
-			return (JsonC) JsonDecoder.inject(o, JsonC.class, new JsonC());
+			return new JsonC();
 		}
 
 		@JsonField(tag = "a", IOType = JsonField.IOType.W)

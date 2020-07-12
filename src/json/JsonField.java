@@ -4,6 +4,7 @@ import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -33,12 +34,52 @@ public @interface JsonField {
 		R, W, RW
 	}
 
+	public static JsonField DEF = new JsonField() {
+
+		@Override
+		public Class<? extends Annotation> annotationType() {
+			return JsonField.class;
+		}
+
+		@Override
+		public String generator() {
+			return "";
+		}
+
+		@Override
+		public GenType GenType() {
+			return GenType.SET;
+		}
+
+		@Override
+		public IOType IOType() {
+			return IOType.RW;
+		}
+
+		@Override
+		public boolean noErr() {
+			return false;
+		}
+
+		@Override
+		public String tag() {
+			return "";
+		}
+
+		@Override
+		public String typeProvider() {
+			return "";
+		}
+	};
+
 	/**
 	 * ignored when GenType is not GEN, must refer to a static method declared in
 	 * this class with parameter of this type and {@code JsonObject}. second
 	 * parameter can be unused, as it will also be injected
 	 */
 	String generator() default "";
+	
+	String typeProvider() default "";
 
 	/**
 	 * Generation Type for this Field. Default is SET, which means to set the value.

@@ -93,8 +93,8 @@ public class JsonDecoder {
 				}
 				if (jfield.GenType() == JsonField.GenType.GEN) {
 					Class<?> ccls = cont.getClass();
-					Method m = ccls.getDeclaredMethod(jfield.generator(), ccls, String.class, JsonElement.class);
-					Object val = m.invoke(null, cont, field.getName(), elem);
+					Method m = ccls.getDeclaredMethod(jfield.generator(), String.class, JsonElement.class);
+					Object val = m.invoke(cont, field.getName(), elem);
 					cls = val.getClass();
 					if (cls.getAnnotation(JsonClass.class) != null)
 						inject(elem.getAsJsonObject(), cls, val);

@@ -24,8 +24,8 @@ public class Test {
 	@JsonClass(type = Type.DATA)
 	public static class JsonA {
 
-		public static JsonB gen(JsonA obj, String tag, JsonElement jobj) {
-			return new JsonB(obj);
+		public JsonB gen(String tag, JsonElement jobj) {
+			return new JsonB(this);
 		}
 
 		@JsonField(generic = Integer.class)

@@ -24,7 +24,7 @@ public class Test {
 	@JsonClass(type = Type.DATA)
 	public static class JsonA {
 
-		public static JsonB gen(JsonA obj, String tag, JsonObject jobj) {
+		public static JsonB gen(JsonA obj, String tag, JsonElement jobj) {
 			return new JsonB(obj);
 		}
 
@@ -102,8 +102,8 @@ public class Test {
 	}
 
 	public static void main(String[] args) throws Exception {
-		PackLoader.writePack(new File("./pack.pack"), new File("./src"), "ver", "id", "test", "password");
-		PackLoader.readPack((str) -> getFile(new File("./out/" + str)), new File("./pack.pack"));
+		//PackLoader.writePack(new File("./pack.pack"), new File("./src"), "ver", "id", "test", "password");
+		//PackLoader.readPack((str) -> getFile(new File("./out/" + str)), new File("./pack.pack"));
 		File f = new File("./test.json");
 		JsonElement elem = JsonParser.parseReader(new FileReader(f));
 		JsonA obj = JsonDecoder.decode(elem, JsonA.class);

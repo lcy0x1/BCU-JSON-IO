@@ -28,6 +28,7 @@ import java.lang.annotation.Target;
  * <li>Collection - GenType.FILL</li>
  * <li>Method - GenType.FILL</li>
  * <li>Method - IOType.RW</li>
+ * <li>Type.FILL - GenType.SET</li>
  * <hr>
  * Suggestions:
  * <li>GenType.GEN with object field without using JsonObject can be replaced

@@ -83,6 +83,32 @@ public class JsonDecoder {
 		if (Set.class.isAssignableFrom(cls)) {
 			return decodeSet(elem, cls, cont, jfield, field);
 		}
+		if (cont != null && jfield != null) {
+			try {
+				if (jfield.GenType() == JsonField.GenType.FILL) {
+					Object val = field.get(cont);
+					if (cls.getAnnotation(JsonClass.class) != null)
+						inject(elem.getAsJsonObject(), cls, val);
+					return val;
+				}
+				if (jfield.GenType() == JsonField.GenType.GEN) {
+					Class<?> ccls = cont.getClass();
+					Method m = ccls.getDeclaredMethod(jfield.generator(), ccls, String.class, JsonElement.class);
+					Object val = m.invoke(null, cont, field.getName(), elem);
+					cls = val.getClass();
+					if (cls.getAnnotation(JsonClass.class) != null)
+						inject(elem.getAsJsonObject(), cls, val);
+					return val;
+
+				}
+			} catch (Exception e) {
+				if (e instanceof JsonException)
+					throw (JsonException) e;
+				JsonException je = new JsonException(Type.INTERNAL, elem, "");
+				je.initCause(e);
+				throw je;
+			}
+		}
 		JsonClass jc = cls.getAnnotation(JsonClass.class);
 		if (jc != null) {
 			return decodeObject(elem, cls, cont, jfield, field, jc);
@@ -266,31 +292,6 @@ public class JsonDecoder {
 		if (jc.type() == JsonClass.Type.DATA || jc.type() == JsonClass.Type.ALLDATA) {
 			try {
 				return inject(jobj, cls, cls.newInstance());
-			} catch (Exception e) {
-				if (e instanceof JsonException)
-					throw (JsonException) e;
-				JsonException je = new JsonException(Type.INTERNAL, elem, "");
-				je.initCause(e);
-				throw je;
-			}
-		} else if (jc.type() == JsonClass.Type.FILL) {
-			if (cont == null || jfield == null || jfield.GenType() == JsonField.GenType.SET
-					|| jfield.GenType() == JsonField.GenType.GEN && jfield.generator().length() == 0)
-				throw new JsonException(Type.FUNC, elem, "no generator parameter");
-			Class<?> ccls = cont.getClass();
-			try {
-				Object val = null;
-				if (jfield.GenType() == JsonField.GenType.GEN) {
-					Method m = ccls.getDeclaredMethod(jfield.generator(), ccls, String.class, JsonObject.class);
-					val = m.invoke(null, cont, field.getName(), jobj);
-					cls = val.getClass();
-				}
-				if (jfield.GenType() == JsonField.GenType.FILL) {
-					if (field == null)
-						throw new JsonException(Type.TAG, null, "GenType FILL requires field");
-					val = field.get(cont);
-				}
-				return inject(jobj, cls, val);
 			} catch (Exception e) {
 				if (e instanceof JsonException)
 					throw (JsonException) e;

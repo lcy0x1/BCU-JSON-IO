@@ -44,6 +44,10 @@ public @interface JsonField {
 		SET, FILL, GEN
 	}
 
+	public static enum SerType {
+		DEF, FUNC, CLASS
+	}
+
 	public static enum IOType {
 		R, W, RW
 	}
@@ -84,6 +88,16 @@ public @interface JsonField {
 		public String tag() {
 			return "";
 		}
+
+		@Override
+		public json.JsonField.SerType SerType() {
+			return SerType.DEF;
+		}
+
+		@Override
+		public String serializer() {
+			return "";
+		}
 	};
 
 	/**
@@ -105,6 +119,10 @@ public @interface JsonField {
 	 * generator function. Functional Fields must use SET.
 	 */
 	GenType GenType() default GenType.SET;
+	
+	SerType SerType() default SerType.DEF;
+	
+	String serializer() default "";
 
 	IOType IOType() default IOType.RW;
 

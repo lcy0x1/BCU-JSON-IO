@@ -79,7 +79,24 @@ public class JsonEncoder {
 					continue;
 				String tag = jf.tag().length() == 0 ? f.getName() : jf.tag();
 				f.setAccessible(true);
-				jobj.add(tag, encode(f.get(obj)));
+
+				JsonElement elem = null;
+				if (jf.SerType() == JsonField.SerType.DEF)
+					elem = encode(f.get(obj));
+				else if (jf.SerType() == JsonField.SerType.FUNC) {
+					if (jf.serializer().length() == 0)
+						throw new JsonException(Type.FUNC, elem, "no serializer function");
+					Method m = cls.getDeclaredMethod(jf.serializer(), f.getType());
+					elem = encode(m.invoke(obj, f.get(obj)));
+				} else if (jf.SerType() == JsonField.SerType.CLASS) {
+					JsonClass cjc = f.getType().getAnnotation(JsonClass.class);
+					if (cjc == null || cjc.serializer().length() == 0)
+						throw new JsonException(Type.FUNC, elem, "no serializer function");
+					String func = cjc.serializer();
+					Method m = cls.getDeclaredMethod(func);
+					elem = encode(m.invoke(obj));
+				}
+				jobj.add(tag, elem);
 			}
 		for (Method m : cls.getDeclaredMethods())
 			if (m.getAnnotation(JsonField.class) != null) {

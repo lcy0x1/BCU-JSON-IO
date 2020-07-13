@@ -25,6 +25,8 @@ public @interface JsonClass {
 
 	String generator() default "";
 
-	JsonClass.Type type();
+	JsonClass.Type type() default Type.DATA;
+	
+	String serializer() default "";
 
 }

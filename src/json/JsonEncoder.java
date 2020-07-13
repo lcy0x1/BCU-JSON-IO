@@ -19,6 +19,10 @@ import json.JsonException.Type;
 public class JsonEncoder {
 
 	public static JsonElement encode(Object obj) throws Exception {
+		return encode(obj, null, null);
+	}
+
+	public static JsonElement encode(Object obj, JsonField jfield, Object holder) throws Exception {
 		if (obj == null)
 			return JsonNull.INSTANCE;
 		if (obj instanceof JsonElement)
@@ -34,33 +38,50 @@ public class JsonEncoder {
 			int n = Array.getLength(obj);
 			JsonArray arr = new JsonArray(n);
 			for (int i = 0; i < n; i++)
-				arr.add(encode(Array.get(obj, i)));
+				arr.add(encode(Array.get(obj, i), jfield, holder));
 			return arr;
 		}
+		if (obj instanceof List)
+			return encodeList((List<?>) obj, jfield, holder);
+		if (obj instanceof Set)
+			return encodeSet((Set<?>) obj, jfield, holder);
+		if (obj instanceof Map)
+			return encodeMap((Map<?, ?>) obj, jfield, holder);
+
+		if (jfield != null) {
+			if (jfield.SerType() == JsonField.SerType.FUNC) {
+				if (holder == null || jfield.serializer().length() == 0)
+					throw new JsonException(Type.FUNC, null, "no serializer function");
+				Method m = holder.getClass().getMethod(jfield.serializer(), cls);
+				return encode(m.invoke(holder, obj));
+			} else if (jfield.SerType() == JsonField.SerType.CLASS) {
+				JsonClass cjc = cls.getAnnotation(JsonClass.class);
+				if (cjc == null || cjc.serializer().length() == 0)
+					throw new JsonException(Type.FUNC, null, "no serializer function");
+				String func = cjc.serializer();
+				Method m = cls.getMethod(func);
+				return encode(m.invoke(obj), null, null);
+			}
+		}
+
 		if (cls.getAnnotation(JsonClass.class) != null)
 			return encodeObject(new JsonObject(), obj, cls);
-		if (obj instanceof List)
-			return encodeList((List<?>) obj);
-		if (obj instanceof Set)
-			return encodeSet((Set<?>) obj);
-		if (obj instanceof Map)
-			return encodeMap((Map<?, ?>) obj);
 		throw new JsonException(Type.UNDEFINED, null, "object " + obj + " not defined");
 	}
 
-	private static JsonArray encodeList(List<?> list) throws Exception {
+	private static JsonArray encodeList(List<?> list, JsonField jfield, Object holder) throws Exception {
 		JsonArray ans = new JsonArray(list.size());
 		for (Object obj : list)
-			ans.add(encode(obj));
+			ans.add(encode(obj, jfield, holder));
 		return ans;
 	}
 
-	private static JsonArray encodeMap(Map<?, ?> map) throws Exception {
+	private static JsonArray encodeMap(Map<?, ?> map, JsonField jfield, Object holder) throws Exception {
 		JsonArray ans = new JsonArray(map.size());
 		for (Entry<?, ?> obj : map.entrySet()) {
 			JsonObject ent = new JsonObject();
-			ent.add("key", encode(obj.getKey()));
-			ent.add("val", encode(obj.getValue()));
+			ent.add("key", encode(obj.getKey(), jfield, holder));
+			ent.add("val", encode(obj.getValue(), jfield, holder));
 			ans.add(ent);
 		}
 		return ans;
@@ -79,24 +100,7 @@ public class JsonEncoder {
 					continue;
 				String tag = jf.tag().length() == 0 ? f.getName() : jf.tag();
 				f.setAccessible(true);
-
-				JsonElement elem = null;
-				if (jf.SerType() == JsonField.SerType.DEF)
-					elem = encode(f.get(obj));
-				else if (jf.SerType() == JsonField.SerType.FUNC) {
-					if (jf.serializer().length() == 0)
-						throw new JsonException(Type.FUNC, elem, "no serializer function");
-					Method m = cls.getDeclaredMethod(jf.serializer(), f.getType());
-					elem = encode(m.invoke(obj, f.get(obj)));
-				} else if (jf.SerType() == JsonField.SerType.CLASS) {
-					JsonClass cjc = f.getType().getAnnotation(JsonClass.class);
-					if (cjc == null || cjc.serializer().length() == 0)
-						throw new JsonException(Type.FUNC, elem, "no serializer function");
-					String func = cjc.serializer();
-					Method m = cls.getDeclaredMethod(func);
-					elem = encode(m.invoke(obj));
-				}
-				jobj.add(tag, elem);
+				jobj.add(tag, encode(f.get(obj), jf, obj));
 			}
 		for (Method m : cls.getDeclaredMethods())
 			if (m.getAnnotation(JsonField.class) != null) {
@@ -108,15 +112,15 @@ public class JsonEncoder {
 				String tag = jf.tag();
 				if (tag.length() == 0)
 					throw new JsonException(Type.TAG, null, "function fields must have tag");
-				jobj.add(tag, encode(m.invoke(obj)));
+				jobj.add(tag, encode(m.invoke(obj), jf, obj));
 			}
 		return jobj;
 	}
 
-	private static JsonArray encodeSet(Set<?> set) throws Exception {
+	private static JsonArray encodeSet(Set<?> set, JsonField jfield, Object holder) throws Exception {
 		JsonArray ans = new JsonArray(set.size());
 		for (Object obj : set)
-			ans.add(encode(obj));
+			ans.add(encode(obj, jfield, holder));
 		return ans;
 	}
 

@@ -93,11 +93,9 @@ public class JsonDecoder {
 				}
 				if (jfield.GenType() == JsonField.GenType.GEN) {
 					Class<?> ccls = cont.getClass();
-					Method m = ccls.getDeclaredMethod(jfield.generator(), String.class, JsonElement.class);
-					Object val = m.invoke(cont, field.getName(), elem);
+					Method m = ccls.getMethod(jfield.generator(), Class.class, JsonElement.class);
+					Object val = m.invoke(cont, cls, elem);
 					cls = val.getClass();
-					if (cls.getAnnotation(JsonClass.class) != null)
-						inject(elem.getAsJsonObject(), cls, val);
 					return val;
 
 				}
@@ -304,7 +302,7 @@ public class JsonDecoder {
 			if (func.length() == 0)
 				throw new JsonException(Type.FUNC, elem, "no generate function");
 			try {
-				Method m = cls.getDeclaredMethod(func, JsonObject.class);
+				Method m = cls.getMethod(func, JsonObject.class);
 				Object val = m.invoke(null, jobj);
 				cls = val.getClass();
 				return inject(jobj, cls, val);
@@ -316,7 +314,7 @@ public class JsonDecoder {
 				throw je;
 			}
 		} else
-			return null;
+			throw new JsonException(Type.UNDEFINED, elem, "class not possible to generate");
 	}
 
 	private static Set<Object> decodeSet(JsonElement elem, Class<?> cls, Object cont, JsonField jfield, Field field)

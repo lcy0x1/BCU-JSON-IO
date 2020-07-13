@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -21,93 +23,178 @@ import json.JsonException;
 
 public class Test {
 
-	@JsonClass(type = Type.DATA)
-	public static class JsonA {
+	public static class JsonTest_0 {
 
-		public JsonB gen(String tag, JsonElement jobj) {
-			return new JsonB(this);
+		@JsonClass(type = Type.DATA)
+		public static class JsonA {
+
+			public JsonB gen(String tag, JsonElement jobj) {
+				return new JsonB(this);
+			}
+
+			@JsonField(generic = Integer.class)
+			public final ArrayList<Integer> f0 = null;
+
+			@JsonField()
+			public JsonC f1;
+
+			@JsonField(GenType = GenType.GEN, generator = "gen", generic = JsonB.class)
+			public ArrayList<JsonB> f2;
+
+			@JsonField(GenType = GenType.FILL)
+			public JsonB f3 = new JsonB(this);
+
+			@JsonField(generic = { Integer.class, String.class })
+			public HashMap<Integer, String> f4 = null;
+
+			@JsonField
+			public JsonD data;
+
 		}
 
-		@JsonField(generic = Integer.class)
-		public final ArrayList<Integer> f0 = null;
+		@JsonClass(type = Type.FILL)
+		public static class JsonB {
 
-		@JsonField()
-		public JsonC f1;
+			public JsonA par;
 
-		@JsonField(GenType = GenType.GEN, generator = "gen", generic = JsonB.class)
-		public ArrayList<JsonB> f2;
+			@JsonField(generic = Integer.class)
+			public HashSet<Integer> f;
 
-		@JsonField(GenType = GenType.FILL)
-		public JsonB f3 = new JsonB(this);
+			public JsonB(JsonA a) {
+				par = a;
+			}
 
-		@JsonField(generic = { Integer.class, String.class })
-		public HashMap<Integer, String> f4 = null;
+			@OnInjected
+			public void create() {
+				System.out.println("OnInjected: " + f.size());
+			}
 
-		@JsonField
-		public JsonD data;
+		}
+
+		@JsonClass(type = Type.MANUAL, generator = "gen")
+		public static class JsonC {
+
+			public static JsonC gen(JsonObject o) throws JsonException {
+				return new JsonC();
+			}
+
+			@JsonField(tag = "a", IOType = JsonField.IOType.W)
+			public int getA() {
+				return 10;
+			}
+
+			@JsonField(tag = "a", IOType = JsonField.IOType.R)
+			public void setA(int a) {
+				System.out.println(a);
+			};
+
+		}
+
+		@JsonClass(type = Type.ALLDATA)
+		public static class JsonD {
+
+			public int a;
+
+			public int[] b;
+
+			public String c;
+
+			public String[] d;
+
+			public boolean e;
+
+		}
 
 	}
 
-	@JsonClass(type = Type.FILL)
-	public static class JsonB {
+	public static class JsonTest_1 {
 
-		public JsonA par;
+		@JsonClass
+		public static class JsonA {
 
-		@JsonField(generic = Integer.class)
-		public HashSet<Integer> f;
+			public Object gen(Class<?> cls, JsonElement elem) throws JsonException {
+				if (cls == String.class)
+					return elem.getAsString();
+				return JsonDecoder.inject(elem.getAsJsonObject(), cls, new JsonB(this));
+			}
 
-		public JsonB(JsonA a) {
-			par = a;
+			@JsonField
+			public String name;
+
+			@JsonField(generic = { String.class, JsonB.class }, GenType = JsonField.GenType.GEN, generator = "gen")
+			public HashMap<String, JsonB> list;
+
+			@JsonField(GenType = JsonField.GenType.FILL)
+			public JsonC link = new JsonC(this);
+
 		}
 
-		@OnInjected
-		public void create() {
-			System.out.println("OnInjected: " + f.size());
+		@JsonClass(type = JsonClass.Type.FILL)
+		public static class JsonB {
+
+			public final JsonA parent;
+
+			@JsonField
+			public String key;
+			
+			@JsonField
+			public String name;
+
+			public JsonB(JsonA par) {
+				parent = par;
+			}
+
 		}
 
-	}
+		@JsonClass
+		public static class JsonC {
 
-	@JsonClass(type = Type.MANUAL, generator = "gen")
-	public static class JsonC {
+			public final JsonA parent;
 
-		public static JsonC gen(JsonObject o) throws JsonException {
-			return new JsonC();
+			public JsonC(JsonA par) {
+				parent = par;
+			}
+
+			@JsonField(
+					generic = { JsonB.class,Integer.class }, 
+					GenType = JsonField.GenType.GEN, 
+					generator = "gen", 
+					SerType = JsonField.SerType.FUNC, 
+					serializer = "ser"
+			)
+			public HashMap<JsonB, Integer> list;
+
+			public Object gen(Class<?> cls, JsonElement elem) {
+				if (cls == JsonB.class)
+					return parent.list.get(elem.getAsString());
+				if (cls == Integer.class)
+					return elem.getAsInt() * 10;
+				return null;
+			}
+			
+			public Object ser(JsonB b) {
+				return b.key;
+			}
+
 		}
-
-		@JsonField(tag = "a", IOType = JsonField.IOType.W)
-		public int getA() {
-			return 10;
-		}
-
-		@JsonField(tag = "a", IOType = JsonField.IOType.R)
-		public void setA(int a) {
-			System.out.println(a);
-		};
-
-	}
-
-	@JsonClass(type = Type.ALLDATA)
-	public static class JsonD {
-
-		public int a;
-
-		public int[] b;
-
-		public String c;
-
-		public String[] d;
-
-		public boolean e;
 
 	}
 
 	public static void main(String[] args) throws Exception {
-		//PackLoader.writePack(new File("./pack.pack"), new File("./src"), "ver", "id", "test", "password");
-		//PackLoader.readPack((str) -> getFile(new File("./out/" + str)), new File("./pack.pack"));
-		File f = new File("./test.json");
+		testJson();
+	}
+
+	public static void testJson() throws Exception {
+		File f = new File("./testjson/test_1.json");
 		JsonElement elem = JsonParser.parseReader(new FileReader(f));
-		JsonA obj = JsonDecoder.decode(elem, JsonA.class);
+		JsonTest_1.JsonA obj = JsonDecoder.decode(elem, JsonTest_1.JsonA.class);
 		System.out.println(JsonEncoder.encode(obj));
+	}
+
+	public static void testIO() throws Exception {
+		PackLoader.writePack(new File("./pack.pack"), new File("./src"), "ver", "id", "test", "password");
+		PackLoader.readPack((str) -> getFile(new File("./out/" + str)), new File("./pack.pack"));
+
 	}
 
 	private static File getFile(File f) {

@@ -13,7 +13,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import json.JsonClass;
-import json.JsonClass.Type;
+import json.JsonClass.RType;
 import json.JsonField;
 import json.JsonField.GenType;
 import json.JsonDecoder;
@@ -25,7 +25,7 @@ public class Test {
 
 	public static class JsonTest_0 {
 
-		@JsonClass(type = Type.DATA)
+		@JsonClass
 		public static class JsonA {
 
 			public JsonB gen(String tag, JsonElement jobj) {
@@ -52,7 +52,7 @@ public class Test {
 
 		}
 
-		@JsonClass(type = Type.FILL)
+		@JsonClass(read = RType.FILL)
 		public static class JsonB {
 
 			public JsonA par;
@@ -71,7 +71,7 @@ public class Test {
 
 		}
 
-		@JsonClass(type = Type.MANUAL, generator = "gen")
+		@JsonClass(read = RType.MANUAL, generator = "gen")
 		public static class JsonC {
 
 			public static JsonC gen(JsonObject o) throws JsonException {
@@ -90,7 +90,7 @@ public class Test {
 
 		}
 
-		@JsonClass(type = Type.ALLDATA)
+		@JsonClass(read = RType.ALLDATA)
 		public static class JsonD {
 
 			public int a;
@@ -129,7 +129,7 @@ public class Test {
 
 		}
 
-		@JsonClass(type = JsonClass.Type.FILL)
+		@JsonClass(read = JsonClass.RType.FILL)
 		public static class JsonB {
 
 			public final JsonA parent;

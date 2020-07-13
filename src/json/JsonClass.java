@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
 @Target(TYPE)
 public @interface JsonClass {
 
-	public static enum Type {
+	public static enum RType {
 		/**
 		 * generated from json, requires default constructor, no not allow generate tag
 		 */
@@ -22,10 +22,17 @@ public @interface JsonClass {
 		/** generated from json, requires generator method with parameter JsonObject */
 		MANUAL, ALLDATA
 	}
+	
+	public static enum WType {
+		DEF,
+		CLASS
+	}
 
 	String generator() default "";
 
-	JsonClass.Type type() default Type.DATA;
+	JsonClass.RType read() default RType.DATA;
+	
+	JsonClass.WType write() default WType.DEF;
 	
 	String serializer() default "";
 

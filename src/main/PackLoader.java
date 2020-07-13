@@ -30,10 +30,10 @@ public class PackLoader {
 
 	}
 
-	@JsonClass(type = JsonClass.Type.ALLDATA)
+	@JsonClass(read = JsonClass.RType.ALLDATA)
 	public static class PackDesc {
 
-		@JsonClass(type = JsonClass.Type.DATA)
+		@JsonClass(read = JsonClass.RType.DATA)
 		public static class FileDesc {
 
 			@JsonField

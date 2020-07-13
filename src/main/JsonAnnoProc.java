@@ -23,7 +23,7 @@ import javax.tools.Diagnostic.Kind;
 
 import json.JsonClass;
 import json.JsonField;
-import json.JsonClass.Type;
+import json.JsonClass.RType;
 
 /** not going to use it anytime soon */
 @SupportedAnnotationTypes({ "JsonClass", "JsonField" })
@@ -42,12 +42,12 @@ public class JsonAnnoProc extends AbstractProcessor {
 			TypeMirror mir = type.getSuperclass();
 			if (!(mir instanceof NoType)) {
 				JsonClass jc1 = mir.getAnnotation(JsonClass.class);
-				if (jc1 != null && jc1.type() != JsonClass.Type.DATA)
+				if (jc1 != null && jc1.read() != JsonClass.RType.DATA)
 					processingEnv.getMessager().printMessage(Kind.ERROR,
 							"the superclass of JsonClass, if is also JsonClass, have to be Type DATA", type);
 			}
 			String cgen = "";
-			if (jc0.type() == Type.MANUAL) {
+			if (jc0.read() == RType.MANUAL) {
 				cgen = jc0.generator();
 				if (cgen.length() == 0)
 					processingEnv.getMessager().printMessage(Kind.ERROR,

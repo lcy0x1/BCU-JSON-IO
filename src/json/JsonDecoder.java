@@ -157,7 +157,7 @@ public class JsonDecoder {
 		Field[] fs = cls.getDeclaredFields();
 		for (Field f : fs) {
 			JsonField jf = f.getAnnotation(JsonField.class);
-			if (jc.type() == JsonClass.Type.ALLDATA)
+			if (jc.read() == JsonClass.RType.ALLDATA)
 				jf = JsonField.DEF;
 			if (jf == null || jf.IOType() == JsonField.IOType.W)
 				continue;
@@ -287,7 +287,7 @@ public class JsonDecoder {
 		if (!elem.isJsonObject())
 			throw new JsonException(Type.TYPE_MISMATCH, elem, "this element is not object");
 		JsonObject jobj = elem.getAsJsonObject();
-		if (jc.type() == JsonClass.Type.DATA || jc.type() == JsonClass.Type.ALLDATA) {
+		if (jc.read() == JsonClass.RType.DATA || jc.read() == JsonClass.RType.ALLDATA) {
 			try {
 				return inject(jobj, cls, cls.newInstance());
 			} catch (Exception e) {
@@ -297,7 +297,7 @@ public class JsonDecoder {
 				je.initCause(e);
 				throw je;
 			}
-		} else if (jc.type() == JsonClass.Type.MANUAL) {
+		} else if (jc.read() == JsonClass.RType.MANUAL) {
 			String func = jc.generator();
 			if (func.length() == 0)
 				throw new JsonException(Type.FUNC, elem, "no generate function");

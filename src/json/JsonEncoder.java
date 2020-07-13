@@ -64,8 +64,18 @@ public class JsonEncoder {
 			}
 		}
 
-		if (cls.getAnnotation(JsonClass.class) != null)
-			return encodeObject(new JsonObject(), obj, cls);
+		JsonClass jc = cls.getAnnotation(JsonClass.class);
+		if (jc != null)
+			if (jc.write() == JsonClass.WType.DEF)
+				return encodeObject(new JsonObject(), obj, cls);
+			else if (jc.write() == JsonClass.WType.CLASS) {
+				if (jc.serializer().length() == 0)
+					throw new JsonException(Type.FUNC, null, "no serializer function");
+				String func = jc.serializer();
+				Method m = cls.getMethod(func);
+				return encode(m.invoke(obj), null, null);
+			}
+		
 		throw new JsonException(Type.UNDEFINED, null, "object " + obj + " not defined");
 	}
 
@@ -92,7 +102,7 @@ public class JsonEncoder {
 			encodeObject(jobj, obj, cls);
 		JsonClass jc = cls.getAnnotation(JsonClass.class);
 		for (Field f : cls.getDeclaredFields())
-			if (jc.type() == JsonClass.Type.ALLDATA || f.getAnnotation(JsonField.class) != null) {
+			if (jc.read() == JsonClass.RType.ALLDATA || f.getAnnotation(JsonField.class) != null) {
 				JsonField jf = f.getAnnotation(JsonField.class);
 				if (jf == null)
 					jf = JsonField.DEF;
